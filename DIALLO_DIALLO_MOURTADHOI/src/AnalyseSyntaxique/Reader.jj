@@ -1,0 +1,171 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+
+
+options
+{
+  static = true;
+}
+
+PARSER_BEGIN(Reader)
+package BaseDeDonnee;
+
+import BaseDeDonnee.*;
+import Operateur.*;
+import test.*;
+
+import java.util.List;
+import java.util.ArrayList;
+
+public class Reader
+{
+  static BD bd;
+  static protected SchemaC schema(ArrayList<Attribut> l, FullInMemoryRelation r) {
+	  if(l.size()==0) return r.getSchema();
+	  Attribut[] atts = new Attribut[l.size()];
+	  { int i = 0; for(Attribut t : l) atts[i++]= r.getSchema().getAttribute(r.getSchema().getOrdreAttribut(t)); }
+	  return new SchemaC(atts);
+	}
+  public static void main(String[] args) throws ParseException {
+    SchemaC sc = new SchemaC(
+				new Attribut("nom", new TypeString(), ProprietesAttribut.primaire),
+				new Attribut("prenom", new TypeString(), ProprietesAttribut.Standard),
+				new Attribut("age", new Entier(), ProprietesAttribut.Standard));
+		FullInMemoryRelation relation = new FullInMemoryRelation("personne1", sc);
+		
+		relation.add(new Tuple("DIALLO","MAMADOU",21));
+		relation.add(new Tuple("BAH","OUMAR",22));
+		relation.add(new Tuple("DIALLO","SORY",19));
+		relation.add(new Tuple("MOURTHADHOI","SULTAN",20));	
+		relation.add(new Tuple("ZIANI","NOUREDINE",18));
+		
+		
+		
+		FullInMemoryRelation r1 = new FullInMemoryRelation("personne2", sc);
+		r1.add(new Tuple("DIALLO","MAMADOU",21));
+		r1.add(new Tuple("DIALLO","SORY",19));
+		r1.add(new Tuple("BAH","OUMAR",22));
+		r1.add(new Tuple("CAMARA","ABOU",23));
+
+		FullInMemoryRelation r2= new FullInMemoryRelation("personne3", sc);
+		r2.add(new Tuple("DIALLO","MAMADOU",21));
+		r2.add(new Tuple("BARRY","SORY",19));
+		r2.add(new Tuple("CONDE","MAMADY",22));
+		r2.add(new Tuple("BODIANG","ASSANE",23));
+		
+		BD base;
+		ArrayList<Relation> rela=  new ArrayList<Relation >();
+				rela.add(relation);
+				rela.add(r1);
+				rela.add(r2);
+				base=new BD(rela);
+				bd=base;
+				//Selection
+	 System.out.println("Saisir votre requete :");
+     Reader r=new Reader(System.in);
+	for(Tuple t: r.interrogation_selection()){
+			for(Object o : t){
+				System.out.print(o+" ");
+			}
+			System.out.println();
+		}
+//Projection
+	 System.out.println("Saisir votre requete :");
+    // Reader r2=new Reader(System.in);
+	for(Tuple t: r.interrogation()){
+			for(Object o : t){
+				System.out.print(o+" ");
+			}
+			System.out.println();
+		}
+  }
+	
+  
+}
+PARSER_END(Reader)
+
+SKIP :
+{ " " | "\r" | "\t" | "\n" }
+
+TOKEN : {
+ < SEMICOMMA : ";" >
+| < COMMA : "," >
+}
+
+
+TOKEN : { 
+   < ORDERBY : "order by">
+ | < SELECT : "select" >
+ | < UNION : "union" >
+ | < ALL : "*" >
+ | < FROM : "from" >
+ | < WHERE : "where" >
+ | < EGAL : "=" >
+ | < DIFFERENT : "<>" >
+ | < INFERIEUR : "<" >
+ | < SUPPERIEUR : ">" >
+ | < SUPEGAL : ">=" >
+ | < INFEGAL : "<=" >
+}
+ 
+
+
+
+TOKEN : { 
+  <#DIGIT: ["0"-"9"]>
+ | < ENTIER : (<DIGIT>)+  >
+ | <#LETTER: ["a"-"z", "A"-"Z"]> 
+ | < NOM : <LETTER> (< LETTER >|< DIGIT >)*  >
+}
+
+ Projection interrogation() : {ArrayList<Attribut> l;FullInMemoryRelation r;}
+{
+  < SELECT >  l=resultat_recherche() < FROM > r=relation_recherche() < SEMICOMMA >
+  { return new Projection(r,schema(l,r)); }
+
+}
+
+Selection interrogation_selection() : {ArrayList<Attribut> l;FullInMemoryRelation r;Attribut attrib; Predicat pre=new Predicat() {
+			
+			@Override
+			public boolean eval(Tuple t){
+			    //String cond=valeur_recherche();
+				return ((String)t.getValeur(0)).equals("BAH");
+				
+			}
+		};;}
+{
+ < SELECT >  l=resultat_recherche() < FROM > r=relation_recherche() < WHERE > attrib=condition_recherche() operation_comparaison() valeur_recherche()< SEMICOMMA >
+  { return new Selection(r,schema(l,r), pre); }
+}
+
+
+ArrayList<Attribut > resultat_recherche() : {Token t; ArrayList<Attribut > l = new ArrayList<Attribut >();ProprietesAttribut typ=null ;}{
+  < ALL > { return l; }
+ |t=< NOM > {l.add(new Attribut(t.image,VOID.type,typ.Standard)); } (< COMMA > t=< NOM > {l.add(new Attribut(t.image,VOID.type,typ.Standard)); } )* { return l; } 
+}
+
+FullInMemoryRelation relation_recherche() : {Token t; }{
+    t=< NOM > {return bd.getRelation(t.image); }
+}
+
+Attribut condition_recherche() : {Token t;ProprietesAttribut typ=null ; } {
+  t=< NOM > { return new Attribut(t.image,VOID.type,typ.Standard); }
+ }
+
+ 
+ String valeur_recherche() : {Token t; } {
+  t=< NOM > { return t.image; }
+ }
+
+ 
+void operation_comparaison(): { } {
+  < EGAL >
+| < DIFFERENT >
+| < INFERIEUR >
+| < SUPPERIEUR >
+| < SUPEGAL >
+| < INFEGAL >
+}
+
