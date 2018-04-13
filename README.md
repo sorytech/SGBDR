@@ -4,8 +4,8 @@ Elcaro est un projet de mise en place d'un système de gestion de base données 
 * Technologie : draw.io (online)    https://www.draw.io/
 ### Todo List
 * Conception
-** Identification des différents concepts
-** Modelisation des conceptes en Diagramme de classe 
+* * Identification des différents concepts
+* * Modelisation des conceptes en Diagramme de classe 
 * Développement
-** Choix du niveau d'abstration des conceptes
-** Mise en place des classes et interface
+* * Choix du niveau d'abstration des conceptes
+* * Mise en place des classes et interface
